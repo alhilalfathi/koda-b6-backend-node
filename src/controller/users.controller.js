@@ -84,3 +84,26 @@ export function updateUser(req, res) {
         data: updatedUser
     })
 }
+
+/**
+ * 
+ * @param {import("express").Request} req 
+ * @param {import("express").Response} res 
+ */
+export function deleteUser(req, res) {
+    const id = parseInt(req.params.id)
+    const user = userModel.deleteUser(id)
+
+    if (!user) {
+        return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
+            success: false,
+            message: "User not found"
+        })
+    }
+
+    res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "User deleted successfully",
+        data: user
+    })
+}

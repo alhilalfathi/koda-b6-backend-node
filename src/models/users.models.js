@@ -22,9 +22,9 @@ let incrementID = userData.length + 1
 export function createUser(data) {
     const id = incrementID++
     const newData = {
-    id,
-    ...data
-}
+        id,
+        ...data
+    }
     userData.push(newData)
     return newData
 }
@@ -44,10 +44,10 @@ export function getAllUsers() {
  * @returns {User}
  */
 export function getUserByID(id) {
-    const found = userData.find((user)=> user.id === id)
-    if (found){
+    const found = userData.find((user) => user.id === id)
+    if (found) {
         return found
-    }else {
+    } else {
         throw new Error("user not found")
     }
 }
@@ -58,7 +58,7 @@ export function getUserByID(id) {
  * @param {Partial<User>} data 
  */
 export function updateUser(id, data) {
-    const foundIndex = userData.findIndex((user)=> user.id === id)
+    const foundIndex = userData.findIndex((user) => user.id === id)
     if (foundIndex === -1) {
         return null
     }
@@ -67,4 +67,18 @@ export function updateUser(id, data) {
         ...data
     }
     return userData
+}
+
+/**
+ * 
+ * @param {number} id 
+ * @returns 
+ */
+export function deleteUser(id) {
+    const foundIndex = userData.findIndex(user => user.id === id)
+    if (foundIndex === -1) {
+        return null
+    }
+    const deletedUser = userData.splice(foundIndex, 1)
+    return deletedUser[0]
 }
