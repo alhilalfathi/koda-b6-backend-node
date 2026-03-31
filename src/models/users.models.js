@@ -20,13 +20,15 @@ let incrementID = userData.length + 1
  * @returns {User}
  */
 export function createUser(data) {
-const id = incrementID++
-const newData = [
+    const id = incrementID++
+    const newData = {
     id,
     ...data
-]
-    return userData.push(newData)
 }
+    userData.push(newData)
+    return newData
+}
+
 
 /**
  * 
