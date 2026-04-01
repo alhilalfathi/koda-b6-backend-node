@@ -1,3 +1,5 @@
+import pool from "../lib/db.js"
+
 /**
  * @typedef {Object} User
  * @property {number} id
@@ -8,77 +10,95 @@
  */
 
 /**
- * @type {User[]}
- */
-const userData = []
-
-let incrementID = userData.length + 1
-
-/**
  * 
  * @param {User} data 
- * @returns {User}
+ * @returns {Promise<User>}
  */
-export function createUser(data) {
-    const id = incrementID++
-    const newData = {
-        id,
-        ...data
-    }
-    userData.push(newData)
-    return newData
+export async function createUser(data) {
+    const { fullname, email, password } = data
+    const query = `
+        INSERT INTO "USER" (fullname, email, password)
+        VALUES ($1, $2, $3)
+        RETURNING *
+        `
+    const value = [fullname, email, password]
+    const result = await pool.query(query, value)
+    return result.rows[0]
 }
 
 
 /**
  * 
- * @returns {User[]}
+ * @returns {Promise<User[]>}
  */
-export function getAllUsers() {
-    return userData
+export async function getAllUsers() {
+    const query = `
+    SELECT id, fullname, email
+    FROM "USER"
+    `
+    const userData = await pool.query(query)
+    return userData.rows
 }
 
 /**
  * 
  * @param {number} id 
- * @returns {User}
+ * @returns {Promise<User>}
  */
-export function getUserByID(id) {
-    const found = userData.find((user) => user.id === id)
-    if (found) {
-        return found
-    } else {
-        throw new Error("user not found")
-    }
+export async function getUserByID(id) {
+    const query = `
+    SELECT id, fullname, email
+    FROM "USER"
+    WHERE id = $1
+    `
+    const value = [id]
+    const userData = await pool.query(query,value)
+    return userData.rows[0]
+}
+
+/**
+ * 
+ * @param {string} email 
+ * @returns {Promise<User>}
+ */
+export async function getUserByEmail(email) {
+    const query = `
+    SELECT id, fullname, email
+    FROM "USER"
+    WHERE email = $1
+    `
+    const value = [email]
+    const userData = await pool.query(query,value)
+    return userData.rows[0]
 }
 
 /**
  * 
  * @param {number} id 
  * @param {Partial<User>} data 
+ * @returns {Promise<User>}
  */
-export function updateUser(id, data) {
-    const foundIndex = userData.findIndex((user) => user.id === id)
-    if (foundIndex === -1) {
-        return null
-    }
-    userData[foundIndex] = {
-        ...userData[foundIndex],
-        ...data
-    }
-    return userData
+export async function updateUser(id, data) {
+    const query = `
+    UPDATE "USER" SET 
+    `
+    const value = [id]
+    const userData = await pool.query(query,value)
+    return userData.rows[0]
 }
 
 /**
  * 
  * @param {number} id 
- * @returns 
+ * @returns {Promise<User>}
  */
-export function deleteUser(id) {
-    const foundIndex = userData.findIndex(user => user.id === id)
-    if (foundIndex === -1) {
-        return null
-    }
-    const deletedUser = userData.splice(foundIndex, 1)
-    return deletedUser[0]
+export async function deleteUser(id) {
+    const query = `
+    DELETE
+    FROM "USER"
+    WHERE id = $1
+    `
+    const value = [id]
+    const userData = await pool.query(query,value)
+    return userData.rows[0]
 }
