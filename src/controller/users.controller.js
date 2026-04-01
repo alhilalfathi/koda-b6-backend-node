@@ -6,9 +6,9 @@ import { constants } from "node:http2";
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function createUser(req, res) {
+export async function createUser(req, res) {
     const data = req.body
-    const user = userModel.createUser(data)
+    const user = await userModel.createUser(data)
     res.json({
         success: true,
         message: "user created successfully",
@@ -21,8 +21,8 @@ export function createUser(req, res) {
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function getAllUsers(req, res) {
-    const user = userModel.getAllUsers()
+export async function getAllUsers(req, res) {
+    const user = await userModel.getAllUsers()
     res.json({
         success: true,
         message: "list all users",
@@ -35,9 +35,9 @@ export function getAllUsers(req, res) {
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function getUserByID(req, res) {
+export async function getUserByID(req, res) {
     const id = parseInt(req.params.id)
-    const user = userModel.getUserByID(id)
+    const user = await userModel.getUserByID(id)
 
     if (!user) {
         return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
@@ -57,7 +57,7 @@ export function getUserByID(req, res) {
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function updateUser(req, res) {
+export async function updateUser(req, res) {
     const id = parseInt(req.params.id)
     const { email, password } = req.body
 
@@ -69,7 +69,7 @@ export function updateUser(req, res) {
         updateData.password = password
     }
 
-    const updatedUser = userModel.updateUser(id, updateData)
+    const updatedUser = await userModel.updateUser(id, updateData)
 
     if (!updatedUser) {
         return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
@@ -90,9 +90,9 @@ export function updateUser(req, res) {
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
-export function deleteUser(req, res) {
+export async function deleteUser(req, res) {
     const id = parseInt(req.params.id)
-    const user = userModel.deleteUser(id)
+    const user = await userModel.deleteUser(id)
 
     if (!user) {
         return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
