@@ -122,7 +122,7 @@ export async function deleteProduct(id) {
 }
 
 /**
- * @returns {Promise<ProductLanding[]>}
+ * @returns {Promise<Product[]>}
  */
 export async function recommendedProducts() {
     const query = `
