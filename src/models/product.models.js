@@ -58,7 +58,7 @@ export async function getProductById(id) {
     `
     const value = [id]
     const userData = await pool.query(query,value)
-    return userData.rows
+    return userData.rows||null
 }
 
 /**
@@ -118,7 +118,7 @@ export async function deleteProduct(id) {
     `
     const value = [id]
     const userData = await pool.query(query,value)
-    return userData.rows[0]
+    return userData.rows[0]||null
 }
 
 /**
