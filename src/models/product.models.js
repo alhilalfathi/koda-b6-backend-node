@@ -39,7 +39,7 @@ export async function getAllProducts() {
  * @param {number} id
  * @returns {Promise<Product|null>}
  */
-export async function getProductById(id) {
+export async function getProductByID(id) {
     const query = `
         SELECT 
             p."id", 
