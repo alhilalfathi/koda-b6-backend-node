@@ -63,7 +63,7 @@ export async function getUserByID(id) {
  */
 export async function getUserByEmail(email) {
     const query = `
-    SELECT id, fullname, email
+    SELECT id, fullname, email, password
     FROM "USER"
     WHERE email = $1
     `
@@ -79,10 +79,16 @@ export async function getUserByEmail(email) {
  * @returns {Promise<User>}
  */
 export async function updateUser(id, data) {
+    const {fullname, email, password} = data
     const query = `
     UPDATE "USER" SET 
+    fullname=COALESCE(NULLIF($1,''), fullname),
+    email=COALESCE(NULLIF($2,''), email),
+    password=COALESCE(NULLIF($3,''), password)
+    WHERE id=$4
+    RETURNING id, fullname, email, password
     `
-    const value = [id]
+    const value = [fullname, email, password, id]
     const userData = await pool.query(query,value)
     return userData.rows[0]
 }
