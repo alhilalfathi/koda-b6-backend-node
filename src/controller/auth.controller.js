@@ -1,4 +1,4 @@
-import { GenerateHash } from "../lib/hash.js";
+import { GenerateHash, VerifyHash } from "../lib/hash.js";
 import { GenerateToken } from "../lib/jwt.js";
 import * as userModel from "../models/users.models.js";
 import { constants } from "node:http2";
