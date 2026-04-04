@@ -80,28 +80,28 @@ export async function createProduct(data) {
 /**
  * @param {number} id
  * @param {Object} data
- * @returns {Promise<Product|null>}
+ * @returns {Promise<Object|null>}
  */
 export async function updateProduct(id, data) {
-    const fields = []
-    const values = [id]
-    let paramCount = 2
+    const { product_name, product_desc, price, stock } = data
+    
+    const query = `
+        UPDATE "PRODUCT" SET 
+            product_name = COALESCE(NULLIF($1, ''), product_name),
+            product_desc = COALESCE(NULLIF($2, ''), product_desc),
+            price = COALESCE($3, price),
+            stock = COALESCE($4, stock)
+        WHERE id = $5
+        RETURNING *
+    `
+    const values = [
+        product_name || '', 
+        product_desc || '', 
+        price ?? null, 
+        stock ?? null, 
+        id
+    ]
 
-    const allowedFields = ["product_name", "product_desc", "price", "stock"]
-
-    for (const key of allowedFields) {
-        if (data[key] !== undefined) {
-            fields.push(`"${key}" = $${paramCount}`)
-            values.push(data[key])
-            paramCount++
-        }
-    }
-
-    if (fields.length === 0) {
-        return getProductById(id)
-    }
-
-    const query = `UPDATE "PRODUCT" SET ${fields.join(", ")} WHERE id = $1 RETURNING *`
     const result = await pool.query(query, values)
     return result.rows[0] || null
 }
