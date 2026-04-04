@@ -53,36 +53,53 @@ export async function getUserByID(req, res) {
 }
 
 /**
- * 
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
 export async function updateUser(req, res) {
-    const id = parseInt(req.params.id)
-    const { email, password } = req.body
+    try {
+        const { id } = req.params
+        const { fullname, email, password } = req.body
 
-    const updateData = {}
-    if (email !== undefined) {
-        updateData.email = email
-    }
-    if (password !== undefined) {
-        updateData.password = password
-    }
 
-    const updatedUser = await userModel.updateUser(id, updateData)
+        let updateData = {
+            fullname: fullname || '',
+            email: email || '',
+            password: '' 
+        }
 
-    if (!updatedUser) {
-        return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
+        if (password && password.trim() !== '') {
+            updateData.password = await GenerateHash(password)
+        }
+
+        const updatedUser = await userModel.updateUser(id, updateData)
+
+        if (!updatedUser) {
+            return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
+                success: false,
+                message: "User not found"
+            })
+        }
+
+        const responseData = {
+            id: updatedUser.id,
+            fullname: updatedUser.fullname,
+            email: updatedUser.email
+        }
+
+        res.status(constants.HTTP_STATUS_OK).json({
+            success: true,
+            message: "User updated successfully",
+            data: responseData
+        })
+
+    } catch (error) {
+        console.error("Update User Error:", error)
+        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
             success: false,
-            message: "User not found"
+            message: "Internal server error"
         })
     }
-
-    res.status(constants.HTTP_STATUS_OK).json({
-        success: true,
-        message: "User updated successfully",
-        data: updatedUser
-    })
 }
 
 /**
