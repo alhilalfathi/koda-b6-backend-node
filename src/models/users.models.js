@@ -82,16 +82,17 @@ export async function updateUser(id, data) {
     const {fullname, email, password} = data
     const query = `
     UPDATE "USER" SET 
-    fullname=COALESCE(NULLIF($1,''), fullname),
-    email=COALESCE(NULLIF($2,''), email),
-    password=COALESCE(NULLIF($3,''), password)
-    WHERE id=$4
+    fullname = COALESCE(NULLIF($1,''), fullname),
+    email = COALESCE(NULLIF($2,''), email),
+    password = COALESCE(NULLIF($3,''), password)
+    WHERE id = $4
     RETURNING id, fullname, email, password
     `
     const value = [fullname, email, password, id]
     const userData = await pool.query(query,value)
     return userData.rows[0]
 }
+
 
 /**
  * 
