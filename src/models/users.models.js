@@ -109,3 +109,56 @@ export async function deleteUser(id) {
     const userData = await pool.query(query,value)
     return userData.rows[0]
 }
+
+/**
+ * Update user password by ID
+ * @param {number} id
+ * @param {string} hashedPassword
+ * @returns {Promise<void>}
+ */
+export async function updatePassword(id, hashedPassword) {
+    const query = `UPDATE "USER" SET password=$1 WHERE id=$2`
+    await pool.query(query, [hashedPassword, id])
+}
+
+/**
+ * Get user profile with picture
+ * @param {number} id
+ * @returns {Promise<ProfileResponse|null>}
+ */
+export async function getProfile(id) {
+    const query = `
+        SELECT 
+            u.id, 
+            u.fullname, 
+            u.email,
+            up.path AS picture
+        FROM "USER" u
+        LEFT JOIN LATERAL (
+            SELECT path 
+            FROM "USER_PICTURE" 
+            WHERE user_id = u.id 
+            ORDER BY id DESC 
+            LIMIT 1
+        ) up ON true
+        WHERE u.id = $1
+    `
+    const result = await pool.query(query, [id])
+    return result.rows[0] || null
+}
+
+/**
+ * Upsert user profile picture
+ * @param {number} userId
+ * @param {string} path
+ * @returns {Promise<void>}
+ */
+export async function upsertProfilePicture(userId, path) {
+    const query = `
+        INSERT INTO "USER_PICTURE" (user_id, path)
+        VALUES ($1, $2)
+        ON CONFLICT (user_id)
+        DO UPDATE SET path = EXCLUDED.path
+    `
+    await pool.query(query, [userId, path])
+}
