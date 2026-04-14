@@ -12,8 +12,8 @@ app.use(express.json())
 
 app.use("/admin", adminRouter)
 app.use("/auth", authRouter)
-app.use("/landing", mainRouter)
-app.use("/product", productRouter)
+app.use("/", mainRouter)
+app.use("/products", productRouter)
 
 app.get("/", function(req,res){
     req.status(constants.HTTP_STATUS_OK).json({
