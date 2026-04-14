@@ -16,7 +16,7 @@ app.use("/", mainRouter)
 app.use("/products", productRouter)
 
 app.get("/", function(req,res){
-    req.status(constants.HTTP_STATUS_OK).json({
+    res.status(constants.HTTP_STATUS_OK).json({
         success: true,
         message: "backend running well",
     })
