@@ -416,3 +416,61 @@ export async function uploadProfilePhoto(req, res) {
         })
     }
 }
+
+/**
+ * @swagger
+ * /admin/users/{id}:
+ *   delete:
+ *     summary: Delete user with all related data (transactional)
+ *     tags: [Admin Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ */
+export async function deleteUserWithTransaction(req, res) {
+    try {
+        const id = parseInt(req.params.id)
+
+        if (isNaN(id)) {
+            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
+                success: false,
+                message: "Invalid user ID"
+            })
+        }
+
+        const user = await userModel.deleteUserWithTransaction(id)
+
+        return res.status(constants.HTTP_STATUS_OK).json({
+            success: true,
+            message: "User deleted successfully",
+            data: user
+        })
+
+    } catch (error) {
+        console.error("deleteUser error:", error)
+
+        if (error.message === "User not found") {
+            return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
+                success: false,
+                message: error.message
+            })
+        }
+
+        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: "Internal server error"
+        })
+    }
+}

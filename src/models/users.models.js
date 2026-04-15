@@ -162,3 +162,47 @@ export async function upsertProfilePicture(userId, path) {
     `
     await pool.query(query, [userId, path])
 }
+
+export async function deleteUserWithTransaction(id) {
+    const client = await pool.connect()
+
+    try {
+        await client.query("BEGIN")
+
+        await client.query(
+            `DELETE FROM "USER_PICTURE" WHERE user_id = $1`,
+            [id]
+        )
+
+        await client.query(
+            `DELETE FROM "TRANSACTION_PRODUCT"
+             WHERE transaction_id IN (
+                SELECT id FROM "TRANSACTION" WHERE user_id = $1
+             )`,
+            [id]
+        )
+
+        await client.query(
+            `DELETE FROM "TRANSACTION" WHERE user_id = $1`,
+            [id]
+        )
+
+        const result = await client.query(
+            `DELETE FROM "USER" WHERE id = $1 RETURNING *`,
+            [id]
+        )
+
+        if (result.rows.length === 0) {
+            throw new Error("User not found")
+        }
+
+        await client.query("COMMIT")
+        return result.rows[0]
+
+    } catch (error) {
+        await client.query("ROLLBACK")
+        throw error
+    } finally {
+        client.release()
+    }
+}
