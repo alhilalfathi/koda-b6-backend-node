@@ -1,8 +1,12 @@
 import { createClient } from 'redis'
 
-const redisHost = process.env.REDIS_HOST || '127.0.0.1'
-const redisPort = process.env.REDIS_PORT || '6379'
-const redisPassword = process.env.REDIS_PASSWORD || ''
+// const redisHost = process.env.REDIS_HOST || '127.0.0.1'
+// const redisPort = process.env.REDIS_PORT || '6379'
+// const redisPassword = process.env.REDIS_PASSWORD || ''
+
+const redisHost =redis
+const redisPort =63797
+const redisPassword=root
 
 const redisClient = createClient({
     url: `redis://:${redisPassword}@${redisHost}:${redisPort}`
