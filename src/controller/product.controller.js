@@ -1,6 +1,7 @@
 import * as productModel from "../models/product.models.js";
 import { constants } from "node:http2";
 import redisClient from "../lib/redis.js";
+import { asyncHandler, AppError } from "../lib/errors.js";
 
 /**
  * @swagger
@@ -33,15 +34,8 @@ import redisClient from "../lib/redis.js";
  *       200:
  *         description: Product created successfully
  */
-/**
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
- */
-export async function createProduct(req, res) {
-    const data = req.body
-    const product = await productModel.createProduct(data)
-    
-    // Invalidate cache list
+export const createProduct = asyncHandler(async (req, res) => {
+    const product = await productModel.createProduct(req.body)
     await redisClient.del("products:all")
 
     res.status(constants.HTTP_STATUS_OK).json({
@@ -49,7 +43,7 @@ export async function createProduct(req, res) {
         message: "product created successfully",
         result: product
     })
-}
+})
 
 /**
  * @swagger
@@ -61,14 +55,10 @@ export async function createProduct(req, res) {
  *       200:
  *         description: List of products (cached or fresh)
  */
-/**
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
- */
-export async function getAllProduct(req, res) {
+export const getAllProduct = asyncHandler(async (req, res) => {
     const cacheKey = "products:all"
-    
     const cached = await redisClient.get(cacheKey)
+
     if (cached) {
         return res.status(constants.HTTP_STATUS_OK).json({
             success: true,
@@ -78,7 +68,6 @@ export async function getAllProduct(req, res) {
     }
 
     const product = await productModel.getAllProducts()
-    
     await redisClient.setEx(cacheKey, 3600, JSON.stringify(product))
 
     res.status(constants.HTTP_STATUS_OK).json({
@@ -86,7 +75,7 @@ export async function getAllProduct(req, res) {
         message: "list all product",
         result: product
     })
-}
+})
 
 /**
  * @swagger
@@ -105,11 +94,7 @@ export async function getAllProduct(req, res) {
  *       200:
  *         description: Product details found
  */
-/**
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
- */
-export async function getProductByID(req, res) {
+export const getProductByID = asyncHandler(async (req, res) => {
     const { id } = req.params
     const cacheKey = `product:${id}`
 
@@ -132,7 +117,7 @@ export async function getProductByID(req, res) {
         message: "product found",
         result: product
     })
-}
+})
 
 /**
  * @swagger
@@ -168,49 +153,29 @@ export async function getProductByID(req, res) {
  *       404:
  *         description: Product not found
  */
-/**
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
- */
-export async function updateProduct(req, res) {
-    try {
-        const { id } = req.params;
-        const { product_name, product_desc, price, stock } = req.body;
+export const updateProduct = asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const { product_name, product_desc, price, stock } = req.body
 
-        if (price !== undefined && isNaN(price)) {
-            return res.status(constants.HTTP_STATUS_UNAUTHORIZED).json({ message: "Price must be a number" });
-        }
-
-        const updatedProduct = await productModel.updateProduct(id, {
-            product_name,
-            product_desc,
-            price,
-            stock
-        })
-
-        if (!updatedProduct) {
-            return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
-                success: false,
-                message: "Product not found"
-            })
-        }
-
-        await redisClient.del(`product:${id}`)
-        await redisClient.del("products:all")
-
-        res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "Product updated successfully",
-            data: updatedProduct
-        })
-    } catch (error) {
-        console.error("Update Product Error:", error)
-        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error"
-        })
+    if (price !== undefined && isNaN(price)) {
+        throw new AppError("Price must be a number", constants.HTTP_STATUS_BAD_REQUEST)
     }
-}
+
+    const updatedProduct = await productModel.updateProduct(id, { product_name, product_desc, price, stock })
+
+    if (!updatedProduct) {
+        throw new AppError("Product not found", constants.HTTP_STATUS_NOT_FOUND)
+    }
+
+    await redisClient.del(`product:${id}`)
+    await redisClient.del("products:all")
+
+    res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Product updated successfully",
+        data: updatedProduct
+    })
+})
 
 /**
  * @swagger
@@ -232,19 +197,12 @@ export async function updateProduct(req, res) {
  *       404:
  *         description: Product not found
  */
-/**
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
- */
-export async function deleteProduct(req, res) {
+export const deleteProduct = asyncHandler(async (req, res) => {
     const id = parseInt(req.params.id)
     const product = await productModel.deleteProduct(id)
 
     if (!product) {
-        return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
-            success: false,
-            message: "Product not found"
-        })
+        throw new AppError("Product not found", constants.HTTP_STATUS_NOT_FOUND)
     }
 
     await redisClient.del(`product:${id}`)
@@ -255,4 +213,4 @@ export async function deleteProduct(req, res) {
         message: "Product deleted successfully",
         data: product
     })
-}
+})

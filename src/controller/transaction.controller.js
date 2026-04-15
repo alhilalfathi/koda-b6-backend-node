@@ -1,5 +1,6 @@
 import { constants } from "node:http2"
 import * as transactionModel from "../models/transaction.models.js"
+import { asyncHandler, AppError } from "../lib/errors.js"
 
 /**
  * @swagger
@@ -52,43 +53,32 @@ import * as transactionModel from "../models/transaction.models.js"
  *       500:
  *         description: Internal server error
  */
-export async function createTransaction(req, res) {
-    try {
-        const { trx_id, fullname, email, address, delivery, delivery_fee, tax, total, status_order } = req.body
-        const user_id = res.locals.user.id
+export const createTransaction = asyncHandler(async (req, res) => {
+    const { trx_id, fullname, email, address, delivery, delivery_fee, tax, total, status_order } = req.body
+    const user_id = res.locals.user.id
 
-        if (!trx_id || !fullname || !email || !address || !delivery || !delivery_fee || !tax || !total) {
-            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-                success: false,
-                message: "All fields are required",
-            })
-        }
-
-        await transactionModel.createTransaction({
-            trx_id,
-            user_id,
-            fullname,
-            email,
-            address,
-            delivery,
-            delivery_fee,
-            tax,
-            total,
-            status_order: status_order || "pending",
-        })
-
-        return res.status(constants.HTTP_STATUS_CREATED).json({
-            success: true,
-            message: "Transaction created successfully",
-        })
-    } catch (error) {
-        console.error("createTransaction error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error",
-        })
+    if (!trx_id || !fullname || !email || !address || !delivery || !delivery_fee || !tax || !total) {
+        throw new AppError("All fields are required", constants.HTTP_STATUS_BAD_REQUEST)
     }
-}
+
+    await transactionModel.createTransaction({
+        trx_id,
+        user_id,
+        fullname,
+        email,
+        address,
+        delivery,
+        delivery_fee,
+        tax,
+        total,
+        status_order: status_order || "pending",
+    })
+
+    return res.status(constants.HTTP_STATUS_CREATED).json({
+        success: true,
+        message: "Transaction created successfully",
+    })
+})
 
 /**
  * @swagger
@@ -104,23 +94,15 @@ export async function createTransaction(req, res) {
  *       500:
  *         description: Internal server error
  */
-export async function getAllTransaction(req, res) {
-    try {
-        const result = await transactionModel.getAllTransaction()
+export const getAllTransaction = asyncHandler(async (req, res) => {
+    const result = await transactionModel.getAllTransaction()
 
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "Transactions fetched successfully",
-            data: result,
-        })
-    } catch (error) {
-        console.error("getAllTransaction error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error",
-        })
-    }
-}
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Transactions fetched successfully",
+        data: result,
+    })
+})
 
 /**
  * @swagger
@@ -147,39 +129,24 @@ export async function getAllTransaction(req, res) {
  *       500:
  *         description: Internal server error
  */
-export async function getDetail(req, res) {
-    try {
-        const id = parseInt(req.params.id)
+export const getDetail = asyncHandler(async (req, res) => {
+    const id = parseInt(req.params.id)
 
-        if (isNaN(id)) {
-            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-                success: false,
-                message: "Invalid transaction ID",
-            })
-        }
-
-        const result = await transactionModel.getDetail(id)
-
-        if (!result) {
-            return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
-                success: false,
-                message: "Transaction not found",
-            })
-        }
-
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "Transaction detail fetched successfully",
-            data: result,
-        })
-    } catch (error) {
-        console.error("getDetail error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error",
-        })
+    if (isNaN(id)) {
+        throw new AppError("Invalid transaction ID", constants.HTTP_STATUS_BAD_REQUEST)
     }
-}
+
+    const result = await transactionModel.getDetail(id)
+    if (!result) {
+        throw new AppError("Transaction not found", constants.HTTP_STATUS_NOT_FOUND)
+    }
+
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Transaction detail fetched successfully",
+        data: result,
+    })
+})
 
 /**
  * @swagger
@@ -195,22 +162,13 @@ export async function getDetail(req, res) {
  *       500:
  *         description: Internal server error
  */
-export async function getByUser(req, res) {
-    try {
-        const user_id = res.locals.user.id
+export const getByUser = asyncHandler(async (req, res) => {
+    const user_id = res.locals.user.id
+    const result = await transactionModel.getByUserId(user_id)
 
-        const result = await transactionModel.getByUserId(user_id)
-
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "Transaction history fetched successfully",
-            data: result,
-        })
-    } catch (error) {
-        console.error("getByUser error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error",
-        })
-    }
-}
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Transaction history fetched successfully",
+        data: result,
+    })
+})

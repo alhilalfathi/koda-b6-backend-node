@@ -1,5 +1,6 @@
 import * as cartModel from "../models/cart.models.js"
 import { constants } from "node:http2"
+import { asyncHandler, AppError } from "../lib/errors.js"
 
 /**
  * @swagger
@@ -37,39 +38,22 @@ import { constants } from "node:http2"
  *       500:
  *         description: Internal server error
  */
-export async function createCart(req, res) {
-    try {
-        const { quantity, size_id, variant_id, product_id } = req.body
-        const user_id = res.locals.user.id
+export const createCart = asyncHandler(async (req, res) => {
+    const { quantity, size_id, variant_id, product_id } = req.body
+    const user_id = res.locals.user.id
 
-        if (!quantity || !size_id || !variant_id || !product_id) {
-            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-                success: false,
-                message: "quantity, size_id, variant_id, and product_id are required",
-            })
-        }
-
-        const result = await cartModel.createCart({
-            quantity,
-            size_id,
-            variant_id,
-            user_id,
-            product_id,
-        })
-
-        return res.status(constants.HTTP_STATUS_CREATED).json({
-            success: true,
-            message: "Cart updated successfully",
-            data: result,
-        })
-    } catch (error) {
-        console.error("createCart error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error",
-        })
+    if (!quantity || !size_id || !variant_id || !product_id) {
+        throw new AppError("quantity, size_id, variant_id, and product_id are required", constants.HTTP_STATUS_BAD_REQUEST)
     }
-}
+
+    const result = await cartModel.createCart({ quantity, size_id, variant_id, user_id, product_id })
+
+    return res.status(constants.HTTP_STATUS_CREATED).json({
+        success: true,
+        message: "Cart updated successfully",
+        data: result,
+    })
+})
 
 /**
  * @swagger
@@ -85,25 +69,16 @@ export async function createCart(req, res) {
  *       500:
  *         description: Internal server error
  */
-export async function getCartByUser(req, res) {
-    try {
-        const user_id = res.locals.user.id
+export const getCartByUser = asyncHandler(async (req, res) => {
+    const user_id = res.locals.user.id
+    const result = await cartModel.getUserCart(user_id)
 
-        const result = await cartModel.getUserCart(user_id)
-
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "Cart fetched successfully",
-            data: result,
-        })
-    } catch (error) {
-        console.error("getCartByUser error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error",
-        })
-    }
-}
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Cart fetched successfully",
+        data: result,
+    })
+})
 
 /**
  * @swagger
@@ -142,39 +117,22 @@ export async function getCartByUser(req, res) {
  *       500:
  *         description: Internal server error
  */
-export async function updateCart(req, res) {
-    try {
-        const id_cart = parseInt(req.params.id)
-        const { quantity, size, variant, product_id } = req.body
-        const user_id = res.locals.user.id
+export const updateCart = asyncHandler(async (req, res) => {
+    const id_cart = parseInt(req.params.id)
+    const { quantity, size, variant, product_id } = req.body
+    const user_id = res.locals.user.id
 
-        if (isNaN(id_cart)) {
-            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-                success: false,
-                message: "Invalid cart ID",
-            })
-        }
-
-        await cartModel.updateCart(id_cart, {
-            quantity,
-            size,
-            variant,
-            user_id,
-            product_id,
-        })
-
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "Cart updated successfully",
-        })
-    } catch (error) {
-        console.error("updateCart error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error",
-        })
+    if (isNaN(id_cart)) {
+        throw new AppError("Invalid cart ID", constants.HTTP_STATUS_BAD_REQUEST)
     }
-}
+
+    await cartModel.updateCart(id_cart, { quantity, size, variant, user_id, product_id })
+
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Cart updated successfully",
+    })
+})
 
 /**
  * @swagger
@@ -190,21 +148,12 @@ export async function updateCart(req, res) {
  *       500:
  *         description: Internal server error
  */
-export async function deleteCart(req, res) {
-    try {
-        const user_id = res.locals.user.id
+export const deleteCart = asyncHandler(async (req, res) => {
+    const user_id = res.locals.user.id
+    await cartModel.deleteCart(user_id)
 
-        await cartModel.deleteCart(user_id)
-
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "Cart deleted successfully",
-        })
-    } catch (error) {
-        console.error("deleteCart error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error",
-        })
-    }
-}
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Cart deleted successfully",
+    })
+})

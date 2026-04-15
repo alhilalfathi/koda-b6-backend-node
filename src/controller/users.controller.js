@@ -4,6 +4,7 @@ import { GenerateHash, VerifyHash } from "../lib/hash.js"
 import path from "node:path"
 import { v4 as uuidv4 } from "uuid"
 import fs from "node:fs"
+import { asyncHandler, AppError } from "../lib/errors.js"
 
 /**
  * @swagger
@@ -34,15 +35,14 @@ import fs from "node:fs"
  *       200:
  *         description: User created successfully
  */
-export async function createUser(req, res) {
-    const data = req.body
-    const user = await userModel.createUser(data)
+export const createUser = asyncHandler(async (req, res) => {
+    const user = await userModel.createUser(req.body)
     res.json({
         success: true,
         message: "user created successfully",
         result: user
     })
-}
+})
 
 /**
  * @swagger
@@ -56,14 +56,14 @@ export async function createUser(req, res) {
  *       200:
  *         description: Successfully fetched all users
  */
-export async function getAllUsers(req, res) {
+export const getAllUsers = asyncHandler(async (req, res) => {
     const user = await userModel.getAllUsers()
     res.json({
         success: true,
         message: "list all users",
         result: user
     })
-}
+})
 
 /**
  * @swagger
@@ -85,22 +85,19 @@ export async function getAllUsers(req, res) {
  *       404:
  *         description: User not found
  */
-export async function getUserByID(req, res) {
+export const getUserByID = asyncHandler(async (req, res) => {
     const id = parseInt(req.params.id)
     const user = await userModel.getUserByID(id)
 
     if (!user) {
-        return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
-            success: false,
-            message: "User not found"
-        })
+        throw new AppError("User not found", constants.HTTP_STATUS_NOT_FOUND)
     }
 
     res.status(constants.HTTP_STATUS_OK).json({
         success: true,
         data: user
     })
-}
+})
 
 /**
  * @swagger
@@ -132,50 +129,38 @@ export async function getUserByID(req, res) {
  *       200:
  *         description: User updated successfully
  */
-export async function updateUser(req, res) {
-    try {
-        const { id } = req.params
-        const { fullname, email, password } = req.body
+export const updateUser = asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const { fullname, email, password } = req.body
 
-        let updateData = {
-            fullname: fullname || '',
-            email: email || '',
-            password: '' 
-        }
-
-        if (password && password.trim() !== '') {
-            updateData.password = await GenerateHash(password)
-        }
-
-        const updatedUser = await userModel.updateUser(id, updateData)
-
-        if (!updatedUser) {
-            return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
-                success: false,
-                message: "User not found"
-            })
-        }
-
-        const responseData = {
-            id: updatedUser.id,
-            fullname: updatedUser.fullname,
-            email: updatedUser.email
-        }
-
-        res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "User updated successfully",
-            data: responseData
-        })
-
-    } catch (error) {
-        console.error("Update User Error:", error)
-        res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error"
-        })
+    let updateData = {
+        fullname: fullname || '',
+        email: email || '',
+        password: ''
     }
-}
+
+    if (password && password.trim() !== '') {
+        updateData.password = await GenerateHash(password)
+    }
+
+    const updatedUser = await userModel.updateUser(id, updateData)
+
+    if (!updatedUser) {
+        throw new AppError("User not found", constants.HTTP_STATUS_NOT_FOUND)
+    }
+
+    const responseData = {
+        id: updatedUser.id,
+        fullname: updatedUser.fullname,
+        email: updatedUser.email
+    }
+
+    res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "User updated successfully",
+        data: responseData
+    })
+})
 
 /**
  * @swagger
@@ -195,15 +180,12 @@ export async function updateUser(req, res) {
  *       200:
  *         description: User deleted successfully
  */
-export async function deleteUser(req, res) {
+export const deleteUser = asyncHandler(async (req, res) => {
     const id = parseInt(req.params.id)
     const user = await userModel.deleteUser(id)
 
     if (!user) {
-        return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
-            success: false,
-            message: "User not found"
-        })
+        throw new AppError("User not found", constants.HTTP_STATUS_NOT_FOUND)
     }
 
     res.status(constants.HTTP_STATUS_OK).json({
@@ -211,7 +193,7 @@ export async function deleteUser(req, res) {
         message: "User deleted successfully",
         data: user
     })
-}
+})
 
 /**
  * @swagger
@@ -225,31 +207,20 @@ export async function deleteUser(req, res) {
  *       200:
  *         description: Profile fetched successfully
  */
-export async function getProfile(req, res) {
-    try {
-        const user_id = res.locals.user.id
+export const getProfile = asyncHandler(async (req, res) => {
+    const user_id = res.locals.user.id
 
-        const user = await userModel.getProfile(user_id)
-        if (!user) {
-            return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
-                success: false,
-                message: "User not found",
-            })
-        }
-
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "Get profile successfully",
-            results: user,
-        })
-    } catch (error) {
-        console.error("getProfile error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: error.message,
-        })
+    const user = await userModel.getProfile(user_id)
+    if (!user) {
+        throw new AppError("User not found", constants.HTTP_STATUS_NOT_FOUND)
     }
-}
+
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Get profile successfully",
+        results: user,
+    })
+})
 
 /**
  * @swagger
@@ -273,26 +244,18 @@ export async function getProfile(req, res) {
  *       200:
  *         description: Profile updated successfully
  */
-export async function updateProfile(req, res) {
-    try {
-        const user_id = res.locals.user.id
-        const { fullname, email, password } = req.body
+export const updateProfile = asyncHandler(async (req, res) => {
+    const user_id = res.locals.user.id
+    const { fullname, email, password } = req.body
 
-        const updated = await userModel.updateById(user_id, { fullname, email, password })
+    const updated = await userModel.updateById(user_id, { fullname, email, password })
 
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "User updated successfully",
-            results: updated,
-        })
-    } catch (error) {
-        console.error("updateProfile error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: error.message,
-        })
-    }
-}
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "User updated successfully",
+        results: updated,
+    })
+})
 
 /**
  * @swagger
@@ -320,49 +283,32 @@ export async function updateProfile(req, res) {
  *       200:
  *         description: Password updated successfully
  */
-export async function changePassword(req, res) {
-    try {
-        const user_id = res.locals.user.id
-        const { old_password, new_password } = req.body
+export const changePassword = asyncHandler(async (req, res) => {
+    const user_id = res.locals.user.id
+    const { old_password, new_password } = req.body
 
-        if (!old_password || !new_password) {
-            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-                success: false,
-                message: "old_password and new_password are required",
-            })
-        }
-
-        const user = await userModel.getById(user_id)
-        if (!user) {
-            return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
-                success: false,
-                message: "User not found",
-            })
-        }
-
-        const match = await VerifyHash(old_password, user.password)
-        if (!match) {
-            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-                success: false,
-                message: "old password is incorrect",
-            })
-        }
-
-        const hashed = await HashPassword(new_password)
-        await userModel.updatePassword(user_id, hashed)
-
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "Password update successfully",
-        })
-    } catch (error) {
-        console.error("changePassword error:", error)
-        return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-            success: false,
-            message: error.message,
-        })
+    if (!old_password || !new_password) {
+        throw new AppError("old_password and new_password are required", constants.HTTP_STATUS_BAD_REQUEST)
     }
-}
+
+    const user = await userModel.getById(user_id)
+    if (!user) {
+        throw new AppError("User not found", constants.HTTP_STATUS_NOT_FOUND)
+    }
+
+    const match = await VerifyHash(old_password, user.password)
+    if (!match) {
+        throw new AppError("old password is incorrect", constants.HTTP_STATUS_BAD_REQUEST)
+    }
+
+    const hashed = await GenerateHash(new_password)
+    await userModel.updatePassword(user_id, hashed)
+
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Password update successfully",
+    })
+})
 
 /**
  * @swagger
@@ -385,37 +331,26 @@ export async function changePassword(req, res) {
  *       200:
  *         description: Photo uploaded successfully
  */
-export async function uploadProfilePhoto(req, res) {
-    try {
-        const user_id = res.locals.user.id
+export const uploadProfilePhoto = asyncHandler(async (req, res) => {
+    const user_id = res.locals.user.id
 
-        if (!req.file) {
-            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-                success: false,
-                message: "File is required",
-            })
-        }
-
-        const safeName = path.basename(req.file.originalname)
-        const filename = `uploads/${Date.now()}_${uuidv4()}_${safeName}`
-
-        fs.renameSync(req.file.path, filename)
-
-        await userModel.upsertProfilePicture(user_id, filename)
-
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "Upload success",
-            results: filename,
-        })
-    } catch (error) {
-        console.error("uploadProfilePhoto error:", error)
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: error.message,
-        })
+    if (!req.file) {
+        throw new AppError("File is required", constants.HTTP_STATUS_BAD_REQUEST)
     }
-}
+
+    const safeName = path.basename(req.file.originalname)
+    const filename = `uploads/${Date.now()}_${uuidv4()}_${safeName}`
+
+    fs.renameSync(req.file.path, filename)
+
+    await userModel.upsertProfilePicture(user_id, filename)
+
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "Upload success",
+        results: filename,
+    })
+})
 
 /**
  * @swagger
@@ -439,38 +374,18 @@ export async function uploadProfilePhoto(req, res) {
  *       500:
  *         description: Internal server error
  */
-export async function deleteUserWithTransaction(req, res) {
-    try {
-        const id = parseInt(req.params.id)
+export const deleteUserWithTransaction = asyncHandler(async (req, res) => {
+    const id = parseInt(req.params.id)
 
-        if (isNaN(id)) {
-            return res.status(constants.HTTP_STATUS_BAD_REQUEST).json({
-                success: false,
-                message: "Invalid user ID"
-            })
-        }
-
-        const user = await userModel.deleteUserWithTransaction(id)
-
-        return res.status(constants.HTTP_STATUS_OK).json({
-            success: true,
-            message: "User deleted successfully",
-            data: user
-        })
-
-    } catch (error) {
-        console.error("deleteUser error:", error)
-
-        if (error.message === "User not found") {
-            return res.status(constants.HTTP_STATUS_NOT_FOUND).json({
-                success: false,
-                message: error.message
-            })
-        }
-
-        return res.status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: "Internal server error"
-        })
+    if (isNaN(id)) {
+        throw new AppError("Invalid user ID", constants.HTTP_STATUS_BAD_REQUEST)
     }
-}
+
+    const user = await userModel.deleteUserWithTransaction(id)
+
+    return res.status(constants.HTTP_STATUS_OK).json({
+        success: true,
+        message: "User deleted successfully",
+        data: user
+    })
+})
