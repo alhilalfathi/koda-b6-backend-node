@@ -17,4 +17,10 @@ try {
     console.error('Could not connect to Redis:', err)
 }
 
+console.log({
+  redisHost,
+  redisPort,
+  redisPassword
+})
+
 export default redisClient
