@@ -8,6 +8,7 @@ import adminRouter from "./routes/admin.router.js";
 import mainRouter from "./routes/main.router.js";
 import productRouter from "./routes/product.router.js";
 import errorHandler from "./middlewares/errorHandler.middleware.js";
+import corsMiddleware from "./middlewares/cors.middleware.js";
 
 const app = express()
 const PORT = process.env.PORT || 8888
@@ -32,6 +33,7 @@ const swaggerOptions = {
 const swaggerSpecs = swaggerJsdoc(swaggerOptions)
 
 app.use(express.json())
+app.use(corsMiddleware)
 
 // Swagger route
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs))
