@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.router.js";
 import adminRouter from "./routes/admin.router.js";
 import mainRouter from "./routes/main.router.js";
 import productRouter from "./routes/product.router.js";
+import errorHandler from "./middlewares/errorHandler.middleware.js";
 
 const app = express()
 const PORT = process.env.PORT || 8888
@@ -40,14 +41,17 @@ app.use("/auth", authRouter)
 app.use("/", mainRouter)
 app.use("/products", productRouter)
 
-app.get("/", function(req,res){
+app.get("/", function(req, res) {
     res.status(constants.HTTP_STATUS_OK).json({
         success: true,
         message: "backend running well",
     })
 })
 
-app.listen(PORT, function(){
+// Centralized error handler
+app.use(errorHandler)
+
+app.listen(PORT, function() {
     console.log(`App listening on port ${PORT}`)
     console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`)
 })
