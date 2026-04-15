@@ -6,9 +6,33 @@ import { v4 as uuidv4 } from "uuid"
 import fs from "node:fs"
 
 /**
- * 
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
+ * @swagger
+ * /admin/users:
+ *   post:
+ *     summary: Create a new user (Admin only)
+ *     tags: [Admin Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - fullname
+ *               - email
+ *               - password
+ *             properties:
+ *               fullname:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User created successfully
  */
 export async function createUser(req, res) {
     const data = req.body
@@ -21,9 +45,16 @@ export async function createUser(req, res) {
 }
 
 /**
- * 
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
+ * @swagger
+ * /admin/users:
+ *   get:
+ *     summary: List all users
+ *     tags: [Admin Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully fetched all users
  */
 export async function getAllUsers(req, res) {
     const user = await userModel.getAllUsers()
@@ -35,9 +66,24 @@ export async function getAllUsers(req, res) {
 }
 
 /**
- * 
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
+ * @swagger
+ * /admin/users/{id}:
+ *   get:
+ *     summary: Get user by ID
+ *     tags: [Admin Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User details fetched
+ *       404:
+ *         description: User not found
  */
 export async function getUserByID(req, res) {
     const id = parseInt(req.params.id)
@@ -57,14 +103,39 @@ export async function getUserByID(req, res) {
 }
 
 /**
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
+ * @swagger
+ * /admin/users/{id}:
+ *   patch:
+ *     summary: Update user by ID
+ *     tags: [Admin Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullname:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User updated successfully
  */
 export async function updateUser(req, res) {
     try {
         const { id } = req.params
         const { fullname, email, password } = req.body
-
 
         let updateData = {
             fullname: fullname || '',
@@ -107,9 +178,22 @@ export async function updateUser(req, res) {
 }
 
 /**
- * 
- * @param {import("express").Request} req 
- * @param {import("express").Response} res 
+ * @swagger
+ * /admin/users/{id}:
+ *   delete:
+ *     summary: Delete user by ID
+ *     tags: [Admin Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
  */
 export async function deleteUser(req, res) {
     const id = parseInt(req.params.id)
@@ -130,8 +214,16 @@ export async function deleteUser(req, res) {
 }
 
 /**
- * GET /admin/users/profile
- * Get profile of logged in user
+ * @swagger
+ * /admin/users/profile:
+ *   get:
+ *     summary: Get logged-in user profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile fetched successfully
  */
 export async function getProfile(req, res) {
     try {
@@ -160,8 +252,26 @@ export async function getProfile(req, res) {
 }
 
 /**
- * PATCH /admin/users/profile
- * Update profile of logged in user
+ * @swagger
+ * /admin/users/profile:
+ *   patch:
+ *     summary: Update logged-in user profile
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullname:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
  */
 export async function updateProfile(req, res) {
     try {
@@ -185,8 +295,30 @@ export async function updateProfile(req, res) {
 }
 
 /**
- * PATCH /admin/users/profile/password
- * Change password of logged in user
+ * @swagger
+ * /admin/users/profile/password:
+ *   patch:
+ *     summary: Change password for logged-in user
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - old_password
+ *               - new_password
+ *             properties:
+ *               old_password:
+ *                 type: string
+ *               new_password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
  */
 export async function changePassword(req, res) {
     try {
@@ -233,8 +365,25 @@ export async function changePassword(req, res) {
 }
 
 /**
- * PATCH /admin/users/profile/photo
- * Upload profile photo for logged in user
+ * @swagger
+ * /admin/users/profile/photo:
+ *   patch:
+ *     summary: Upload profile photo
+ *     tags: [Profile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               picture:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Photo uploaded successfully
  */
 export async function uploadProfilePhoto(req, res) {
     try {

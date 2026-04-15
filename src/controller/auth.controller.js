@@ -4,7 +4,37 @@ import * as userModel from "../models/users.models.js";
 import { constants } from "node:http2";
 
 /**
- * 
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - fullname
+ *               - email
+ *               - password
+ *             properties:
+ *               fullname:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *       400:
+ *         description: Bad request (Email already exists or missing fields)
+ *       500:
+ *         description: Internal server error
+ */
+/**
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
@@ -55,9 +85,35 @@ export async function register(req, res) {
     }
 }
 
-
 /**
- * 
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: User login
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Unauthorized (Invalid email or password)
+ *       500:
+ *         description: Internal server error
+ */
+/**
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */

@@ -2,8 +2,40 @@ import * as cartModel from "../models/cart.models.js"
 import { constants } from "node:http2"
 
 /**
- * POST /admin/cart
- * Create or update cart item
+ * @swagger
+ * /admin/cart:
+ *   post:
+ *     summary: Create or update cart item
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - quantity
+ *               - size_id
+ *               - variant_id
+ *               - product_id
+ *             properties:
+ *               quantity:
+ *                 type: integer
+ *               size_id:
+ *                 type: integer
+ *               variant_id:
+ *                 type: integer
+ *               product_id:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Cart updated successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Internal server error
  */
 export async function createCart(req, res) {
     try {
@@ -40,8 +72,18 @@ export async function createCart(req, res) {
 }
 
 /**
- * GET /admin/cart
- * Get all cart items for the authenticated user
+ * @swagger
+ * /admin/cart:
+ *   get:
+ *     summary: Get all cart items for the authenticated user
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart fetched successfully
+ *       500:
+ *         description: Internal server error
  */
 export async function getCartByUser(req, res) {
     try {
@@ -64,8 +106,41 @@ export async function getCartByUser(req, res) {
 }
 
 /**
- * PATCH /admin/cart/:id
- * Update a cart item by cart ID
+ * @swagger
+ * /admin/cart/{id}:
+ *   patch:
+ *     summary: Update a cart item by cart ID
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The cart ID
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               quantity:
+ *                 type: integer
+ *               size:
+ *                 type: integer
+ *               variant:
+ *                 type: integer
+ *               product_id:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Cart updated successfully
+ *       400:
+ *         description: Invalid cart ID
+ *       500:
+ *         description: Internal server error
  */
 export async function updateCart(req, res) {
     try {
@@ -102,8 +177,18 @@ export async function updateCart(req, res) {
 }
 
 /**
- * DELETE /admin/cart/user
- * Delete all cart items for the authenticated user
+ * @swagger
+ * /admin/cart/user:
+ *   delete:
+ *     summary: Delete all cart items for the authenticated user
+ *     tags: [Cart]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Cart deleted successfully
+ *       500:
+ *         description: Internal server error
  */
 export async function deleteCart(req, res) {
     try {

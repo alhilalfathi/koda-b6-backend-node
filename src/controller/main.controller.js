@@ -5,7 +5,18 @@ import { constants } from "node:http2";
 
 
 /**
- * 
+ * @swagger
+ * /reviews:
+ *   get:
+ *     summary: Get all product reviews
+ *     tags: [Reviews]
+ *     responses:
+ *       200:
+ *         description: Successfully fetched all reviews
+ *       500:
+ *         description: Internal server error
+ */
+/**
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
@@ -29,7 +40,18 @@ export async function getAllReviews(req, res) {
 }
 
 /**
- * 
+ * @swagger
+ * /recommended-products:
+ *   get:
+ *     summary: Get list of recommended products
+ *     tags: [Products]
+ *     responses:
+ *       200:
+ *         description: Successfully fetched recommended products
+ *       500:
+ *         description: Internal server error
+ */
+/**
  * @param {import("express").Request} req 
  * @param {import("express").Response} res 
  */
